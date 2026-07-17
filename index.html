@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>断路器样机操作次数统计工具</title>
+  <meta name="description" content="用于记录、统计和导出断路器样机操作次数的静态网页工具，适合部署到 GitHub Pages。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Breaker Operation Counter</p>
+      <h1>断路器样机操作次数统计工具</h1>
+      <p class="subtitle">用于样机动作次数、寿命试验、调试记录和阶段性统计。</p>
+    </div>
+    <div class="header-actions">
+      <button id="exportJsonBtn" class="secondary">导出备份</button>
+      <button id="exportCsvBtn" class="secondary">导出CSV</button>
+      <label class="import-label">
+        导入备份
+        <input id="importFile" type="file" accept=".json,application/json" />
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel form-panel">
+      <h2>新增样机</h2>
+      <form id="breakerForm" class="form-grid">
+        <label>
+          样机编号 <span>*</span>
+          <input id="breakerName" type="text" placeholder="如：CB-72.5kV-001" required />
+        </label>
+        <label>
+          型号/规格
+          <input id="breakerModel" type="text" placeholder="如：72.5kV 真空断路器" />
+        </label>
+        <label>
+          试验目标次数
+          <input id="targetCount" type="number" min="0" step="1" placeholder="如：10000" />
+        </label>
+        <label>
+          初始次数
+          <input id="initialCount" type="number" min="0" step="1" value="0" />
+        </label>
+        <label class="full">
+          备注
+          <input id="breakerNote" type="text" placeholder="如：机械寿命试验、带载/空载、工况说明" />
+        </label>
+        <button type="submit" class="primary full">添加样机</button>
+      </form>
+    </section>
+
+    <section class="panel summary-panel">
+      <h2>统计概览</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>样机数量</span>
+          <strong id="totalBreakers">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>累计操作次数</span>
+          <strong id="totalOperations">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>今日新增次数</span>
+          <strong id="todayOperations">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>达标样机</span>
+          <strong id="finishedBreakers">0</strong>
+        </div>
+      </div>
+      <div class="notice">
+        数据保存在当前浏览器本地。换电脑、清缓存或多人协作前，请先导出备份。
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="section-title-row">
+        <h2>样机列表</h2>
+        <input id="searchInput" class="search" type="search" placeholder="搜索编号、型号或备注" />
+      </div>
+      <div id="breakerList" class="breaker-list empty-state">
+        暂无样机，请先新增一台断路器样机。
+      </div>
+    </section>
+
+    <section class="panel log-panel">
+      <div class="section-title-row">
+        <h2>操作记录</h2>
+        <button id="clearLogBtn" class="danger secondary">清空记录</button>
+      </div>
+      <div class="log-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>样机编号</th>
+              <th>变更次数</th>
+              <th>变更后累计</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr><td colspan="5" class="muted center">暂无操作记录</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <template id="breakerCardTemplate">
+    <article class="breaker-card">
+      <div class="breaker-info">
+        <h3></h3>
+        <p class="meta"></p>
+        <p class="note"></p>
+        <div class="progress-wrap">
+          <div class="progress-head">
+            <span class="progress-text"></span>
+            <span class="progress-percent"></span>
+          </div>
+          <div class="progress-bar"><div></div></div>
+        </div>
+      </div>
+      <div class="counter-box">
+        <span>当前次数</span>
+        <strong class="count-value">0</strong>
+      </div>
+      <div class="action-grid">
+        <button data-delta="1" class="primary">+1</button>
+        <button data-delta="10" class="primary">+10</button>
+        <button data-delta="100" class="primary">+100</button>
+        <button class="secondary manual-btn">手动录入</button>
+        <button class="secondary edit-btn">编辑</button>
+        <button class="danger secondary delete-btn">删除</button>
+      </div>
+    </article>
+  </template>
+
+  <dialog id="manualDialog">
+    <form method="dialog" class="dialog-card" id="manualForm">
+      <h2 id="manualTitle">手动录入</h2>
+      <label>
+        增加次数，可输入负数修正
+        <input id="manualDelta" type="number" step="1" required />
+      </label>
+      <label>
+        说明
+        <input id="manualReason" type="text" placeholder="如：批量补录、误操作修正" />
+      </label>
+      <div class="dialog-actions">
+        <button value="cancel" class="secondary" formnovalidate>取消</button>
+        <button value="confirm" class="primary">确认</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="editDialog">
+    <form method="dialog" class="dialog-card" id="editForm">
+      <h2>编辑样机信息</h2>
+      <label>
+        样机编号
+        <input id="editName" type="text" required />
+      </label>
+      <label>
+        型号/规格
+        <input id="editModel" type="text" />
+      </label>
+      <label>
+        试验目标次数
+        <input id="editTarget" type="number" min="0" step="1" />
+      </label>
+      <label>
+        备注
+        <input id="editNote" type="text" />
+      </label>
+      <div class="dialog-actions">
+        <button value="cancel" class="secondary" formnovalidate>取消</button>
+        <button value="confirm" class="primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
