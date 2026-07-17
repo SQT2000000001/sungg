@@ -6,16 +6,16 @@
   <title>断路器样机操作次数统计工具</title>
   <meta
     name="description"
-    content="使用 Supabase 云数据库在线记录、统计和分析断路器样机操作次数。"
+    content="使用 Supabase 云数据库在线记录、统计和导出断路器样机操作次数。"
   />
-  <link rel="stylesheet" href="./style.css?v=3" />
+  <link rel="stylesheet" href="./style.css?v=2" />
 </head>
 <body>
   <header class="app-header">
     <div>
       <p class="eyebrow">Breaker Operation Counter</p>
       <h1>断路器样机操作次数统计工具</h1>
-      <p class="subtitle">分样机统计、近7日趋势、操作人追溯及云端协同记录。</p>
+      <p class="subtitle">云端保存样机动作次数、寿命试验、调试记录和阶段性统计。</p>
     </div>
 
     <div id="onlineActions" class="header-actions" hidden>
@@ -39,18 +39,30 @@
         <p class="eyebrow">Secure Cloud Access</p>
         <h2>登录后录入云端数据</h2>
         <p class="auth-description">
-          数据保存到 Supabase 数据库，可在不同电脑和手机上同步查看。
+          数据将保存到 Supabase 数据库，可在不同电脑和手机上同步查看。
         </p>
       </div>
 
       <form id="loginForm" class="form-grid single-column">
         <label>
           登录邮箱
-          <input id="loginEmail" type="email" autocomplete="username" placeholder="name@example.com" required />
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="username"
+            placeholder="name@example.com"
+            required
+          />
         </label>
         <label>
           登录密码
-          <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required />
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            minlength="6"
+            required
+          />
         </label>
         <button id="loginBtn" type="submit" class="primary">登录</button>
       </form>
@@ -82,24 +94,20 @@
           <input id="initialCount" type="number" min="0" step="1" value="0" />
         </label>
         <label class="full">
-          初始操作人
-          <input id="initialOperator" type="text" maxlength="100" placeholder="初始次数大于0时填写" />
-        </label>
-        <label class="full">
           备注
-          <input id="breakerNote" type="text" maxlength="500" placeholder="如：机械寿命试验、带载/空载、工况说明" />
+          <input
+            id="breakerNote"
+            type="text"
+            maxlength="500"
+            placeholder="如：机械寿命试验、带载/空载、工况说明"
+          />
         </label>
         <button id="addBreakerBtn" type="submit" class="primary full">添加样机</button>
       </form>
     </section>
 
     <section class="panel summary-panel">
-      <div class="section-title-row compact-row">
-        <div>
-          <h2>总体概览</h2>
-          <p class="section-subtitle">汇总全部样机的运行状态</p>
-        </div>
-      </div>
+      <h2>统计概览</h2>
       <div class="stats-grid">
         <div class="stat-card">
           <span>样机数量</span>
@@ -119,74 +127,38 @@
         </div>
       </div>
       <div class="notice">
-        页面每20秒自动同步一次；统计中的“新增次数”只累计正向操作，负数修正不计入新增趋势。
+        数据保存在云端数据库。页面每 20 秒自动同步一次，也可以点击“刷新数据”。
       </div>
     </section>
 
-    <section class="panel machine-summary-panel full-width-panel">
-      <div class="section-title-row compact-row">
-        <div>
-          <h2>分样机统计概览</h2>
-          <p class="section-subtitle">分别查看每台样机的累计、今日和近7日操作情况</p>
-        </div>
-      </div>
-      <div id="machineSummaryGrid" class="machine-summary-grid empty-state">正在读取云端数据……</div>
-    </section>
-
-    <section class="panel trend-panel full-width-panel">
+    <section class="panel table-panel">
       <div class="section-title-row">
-        <div>
-          <h2>近7日操作趋势</h2>
-          <p class="section-subtitle">按操作时间统计正向增加次数</p>
-        </div>
-        <label class="filter-label">
-          统计范围
-          <select id="trendBreakerFilter" aria-label="选择趋势统计样机">
-            <option value="all">全部样机</option>
-          </select>
-        </label>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="trendChart" role="img" aria-label="近7日操作趋势图"></canvas>
-      </div>
-      <p id="trendSummary" class="chart-summary"></p>
-    </section>
-
-    <section class="panel table-panel full-width-panel">
-      <div class="section-title-row">
-        <div>
-          <h2>样机列表</h2>
-          <p class="section-subtitle">样机支持录入操作和编辑信息，不提供删除入口</p>
-        </div>
+        <h2>样机列表</h2>
         <input id="searchInput" class="search" type="search" placeholder="搜索编号、型号或备注" />
       </div>
-      <div id="breakerList" class="breaker-list empty-state">正在读取云端数据……</div>
+      <div id="breakerList" class="breaker-list empty-state">
+        正在读取云端数据……
+      </div>
     </section>
 
-    <section class="panel log-panel full-width-panel">
+    <section class="panel log-panel">
       <div class="section-title-row">
-        <div>
-          <h2>操作记录</h2>
-          <p class="section-subtitle">支持修改操作时间、操作人和说明，次数及累计值不可编辑</p>
-        </div>
+        <h2>操作记录</h2>
         <button id="clearLogBtn" type="button" class="danger secondary">清空记录</button>
       </div>
       <div class="log-table-wrap">
         <table>
           <thead>
             <tr>
-              <th>操作时间</th>
+              <th>时间</th>
               <th>样机编号</th>
-              <th>操作人</th>
               <th>变更次数</th>
               <th>变更后累计</th>
               <th>说明</th>
-              <th>最后修改</th>
-              <th>操作</th>
             </tr>
           </thead>
           <tbody id="logBody">
-            <tr><td colspan="8" class="muted center">正在读取云端数据……</td></tr>
+            <tr><td colspan="5" class="muted center">正在读取云端数据……</td></tr>
           </tbody>
         </table>
       </div>
@@ -211,35 +183,31 @@
         <span>当前次数</span>
         <strong class="count-value">0</strong>
       </div>
-      <div class="action-grid two-actions">
-        <button type="button" class="primary manual-btn">录入操作</button>
-        <button type="button" class="secondary edit-btn">编辑样机</button>
+      <div class="action-grid">
+        <button type="button" data-delta="1" class="primary">+1</button>
+        <button type="button" data-delta="10" class="primary">+10</button>
+        <button type="button" data-delta="100" class="primary">+100</button>
+        <button type="button" class="secondary manual-btn">手动录入</button>
+        <button type="button" class="secondary edit-btn">编辑</button>
+        <button type="button" class="danger secondary delete-btn">删除</button>
       </div>
     </article>
   </template>
 
   <dialog id="manualDialog">
     <form method="dialog" class="dialog-card" id="manualForm">
-      <h2 id="manualTitle">录入操作</h2>
+      <h2 id="manualTitle">手动录入</h2>
       <label>
-        变更次数 <span>*</span>
-        <input id="manualDelta" type="number" step="1" placeholder="正数增加，负数修正" required />
-      </label>
-      <label>
-        操作时间 <span>*</span>
-        <input id="manualOperationTime" type="datetime-local" step="1" required />
-      </label>
-      <label>
-        操作人 <span>*</span>
-        <input id="manualOperator" type="text" maxlength="100" placeholder="请输入姓名或工号" required />
+        增加次数，可输入负数修正
+        <input id="manualDelta" type="number" step="1" required />
       </label>
       <label>
         说明
-        <input id="manualReason" type="text" maxlength="500" placeholder="如：机械寿命试验第3阶段" />
+        <input id="manualReason" type="text" maxlength="500" placeholder="如：批量补录、误操作修正" />
       </label>
       <div class="dialog-actions">
         <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button id="manualConfirmBtn" value="confirm" class="primary">确认录入</button>
+        <button id="manualConfirmBtn" value="confirm" class="primary">确认</button>
       </div>
     </form>
   </dialog>
@@ -270,29 +238,6 @@
     </form>
   </dialog>
 
-  <dialog id="editLogDialog">
-    <form method="dialog" class="dialog-card" id="editLogForm">
-      <h2>修改操作记录</h2>
-      <div id="editLogReadOnly" class="readonly-summary"></div>
-      <label>
-        操作时间 <span>*</span>
-        <input id="editLogTime" type="datetime-local" step="1" required />
-      </label>
-      <label>
-        操作人 <span>*</span>
-        <input id="editLogOperator" type="text" maxlength="100" required />
-      </label>
-      <label>
-        说明
-        <input id="editLogReason" type="text" maxlength="500" />
-      </label>
-      <div class="dialog-actions">
-        <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button id="editLogConfirmBtn" value="confirm" class="primary">保存修改</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script type="module" src="./app.js?v=3"></script>
+  <script type="module" src="./app.js?v=2"></script>
 </body>
 </html>
