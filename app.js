@@ -7,7 +7,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
  *
  * 不要把 sb_secret_... 或 service_role key 放进网页代码。
  */
-const SUPABASE_URL = "https://bsisdwurajedsiwqtrvz.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://bsisdwurajedsiwqtrvz.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_N1Q4bYnrH7LcHlPTKWcy5g_35ihhwbs";
 const AUTO_REFRESH_MS = 20_000;
 
