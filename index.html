@@ -1,243 +1,214 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>断路器样机操作次数统计工具</title>
-  <meta
-    name="description"
-    content="使用 Supabase 云数据库在线记录、统计和导出断路器样机操作次数。"
-  />
-  <link rel="stylesheet" href="./style.css?v=2" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <meta name="description" content="高压断路器样机机械操作次数、机械寿命进度及操作记录统计工具。">
+  <title>高压断路器机械操作次数统计</title>
+  <link rel="stylesheet" href="./style.css?v=6.0.0">
 </head>
 <body>
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">Breaker Operation Counter</p>
-      <h1>断路器样机操作次数统计工具</h1>
-      <p class="subtitle">云端保存样机动作次数、寿命试验、调试记录和阶段性统计。</p>
-    </div>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4.5 13h6L9 22l10.5-13h-6L13 2Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-machine" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h8M7 5V3m10 2V3"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10m6 10V4m6 16v-7m5 7H2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.1.38.31.73.6 1 .3.26.68.4 1.1.4h.1v4h-.1a1.7 1.7 0 0 0-1.7.6Z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10.6-10.6-3.2-3.2L5 15.8 4 20Z"/><path d="m14.5 6.3 3.2 3.2"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H4v16h6M14 8l4 4-4 4m4-4H9"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18h11a4 4 0 0 0 .8-7.92A7 7 0 0 0 5.5 8.5 4.75 4.75 0 0 0 7 18Z"/><path d="m9 13 2 2 4-4"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></symbol>
+    <symbol id="i-counter" viewBox="0 0 24 24"><path d="M4 17h16M6 14l3-5 3 3 4-7 2 9"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6m-6 4h6"/></symbol>
+  </svg>
 
-    <div id="onlineActions" class="header-actions" hidden>
-      <span id="connectionStatus" class="status-badge" aria-live="polite">正在连接云端……</span>
-      <button id="refreshBtn" type="button" class="secondary">刷新数据</button>
-      <button id="exportJsonBtn" type="button" class="secondary">导出备份</button>
-      <button id="exportCsvBtn" type="button" class="secondary">导出 CSV</button>
-      <label class="import-label">
-        导入备份
-        <input id="importFile" type="file" accept=".json,application/json" />
-      </label>
-      <button id="logoutBtn" type="button" class="danger secondary">退出登录</button>
-    </div>
-  </header>
-
-  <section id="messageBar" class="message-bar" hidden aria-live="polite"></section>
-
-  <main id="authMain" class="auth-layout">
-    <section class="panel auth-panel">
-      <div>
-        <p class="eyebrow">Secure Cloud Access</p>
-        <h2>登录后录入云端数据</h2>
-        <p class="auth-description">
-          数据将保存到 Supabase 数据库，可在不同电脑和手机上同步查看。
-        </p>
+  <section id="authView" class="auth-view">
+    <div class="auth-orbit orbit-a"></div><div class="auth-orbit orbit-b"></div>
+    <article class="login-card">
+      <div class="login-brand">
+        <span class="brand-mark"><svg><use href="#i-bolt"></use></svg></span>
+        <div><strong>断路器统计</strong><span>HV CIRCUIT BREAKER</span></div>
       </div>
-
-      <form id="loginForm" class="form-grid single-column">
-        <label>
-          登录邮箱
-          <input
-            id="loginEmail"
-            type="email"
-            autocomplete="username"
-            placeholder="name@example.com"
-            required
-          />
-        </label>
-        <label>
-          登录密码
-          <input
-            id="loginPassword"
-            type="password"
-            autocomplete="current-password"
-            minlength="6"
-            required
-          />
-        </label>
-        <button id="loginBtn" type="submit" class="primary">登录</button>
+      <div class="login-copy">
+        <span class="overline">SECURE CLOUD WORKSPACE</span>
+        <h1>高压断路器机械<br>操作次数统计</h1>
+        <p>用于样机状态监控、机械寿命试验进度与操作记录追溯。</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <label>登录邮箱<input id="loginEmail" type="email" autocomplete="username" placeholder="name@example.com" required></label>
+        <label>登录密码<input id="loginPassword" type="password" autocomplete="current-password" minlength="6" placeholder="请输入密码" required></label>
+        <button id="loginBtn" class="btn btn-primary btn-block" type="submit">登录系统</button>
       </form>
-
-      <div class="notice">
-        登录账号由管理员在 Supabase 后台创建。请勿在 GitHub 代码中填写数据库 Secret Key。
-      </div>
-    </section>
-  </main>
-
-  <main id="appMain" class="layout" hidden>
-    <section class="panel form-panel">
-      <h2>新增样机</h2>
-      <form id="breakerForm" class="form-grid">
-        <label>
-          样机编号 <span>*</span>
-          <input id="breakerName" type="text" maxlength="100" placeholder="如：CB-72.5kV-001" required />
-        </label>
-        <label>
-          型号/规格
-          <input id="breakerModel" type="text" maxlength="200" placeholder="如：72.5kV 真空断路器" />
-        </label>
-        <label>
-          试验目标次数
-          <input id="targetCount" type="number" min="0" step="1" placeholder="如：10000" />
-        </label>
-        <label>
-          初始次数
-          <input id="initialCount" type="number" min="0" step="1" value="0" />
-        </label>
-        <label class="full">
-          备注
-          <input
-            id="breakerNote"
-            type="text"
-            maxlength="500"
-            placeholder="如：机械寿命试验、带载/空载、工况说明"
-          />
-        </label>
-        <button id="addBreakerBtn" type="submit" class="primary full">添加样机</button>
-      </form>
-    </section>
-
-    <section class="panel summary-panel">
-      <h2>统计概览</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span>样机数量</span>
-          <strong id="totalBreakers">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>累计操作次数</span>
-          <strong id="totalOperations">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>今日新增次数</span>
-          <strong id="todayOperations">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>达标样机</span>
-          <strong id="finishedBreakers">0</strong>
-        </div>
-      </div>
-      <div class="notice">
-        数据保存在云端数据库。页面每 20 秒自动同步一次，也可以点击“刷新数据”。
-      </div>
-    </section>
-
-    <section class="panel table-panel">
-      <div class="section-title-row">
-        <h2>样机列表</h2>
-        <input id="searchInput" class="search" type="search" placeholder="搜索编号、型号或备注" />
-      </div>
-      <div id="breakerList" class="breaker-list empty-state">
-        正在读取云端数据……
-      </div>
-    </section>
-
-    <section class="panel log-panel">
-      <div class="section-title-row">
-        <h2>操作记录</h2>
-        <button id="clearLogBtn" type="button" class="danger secondary">清空记录</button>
-      </div>
-      <div class="log-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>时间</th>
-              <th>样机编号</th>
-              <th>变更次数</th>
-              <th>变更后累计</th>
-              <th>说明</th>
-            </tr>
-          </thead>
-          <tbody id="logBody">
-            <tr><td colspan="5" class="muted center">正在读取云端数据……</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <template id="breakerCardTemplate">
-    <article class="breaker-card">
-      <div class="breaker-info">
-        <h3></h3>
-        <p class="meta"></p>
-        <p class="note"></p>
-        <div class="progress-wrap">
-          <div class="progress-head">
-            <span class="progress-text"></span>
-            <span class="progress-percent"></span>
-          </div>
-          <div class="progress-bar"><div></div></div>
-        </div>
-      </div>
-      <div class="counter-box">
-        <span>当前次数</span>
-        <strong class="count-value">0</strong>
-      </div>
-      <div class="action-grid">
-        <button type="button" data-delta="1" class="primary">+1</button>
-        <button type="button" data-delta="10" class="primary">+10</button>
-        <button type="button" data-delta="100" class="primary">+100</button>
-        <button type="button" class="secondary manual-btn">手动录入</button>
-        <button type="button" class="secondary edit-btn">编辑</button>
-        <button type="button" class="danger secondary delete-btn">删除</button>
-      </div>
+      <p id="loginHint" class="login-hint">请先在 config.js 中填写 Supabase Project URL 与 Publishable key。</p>
     </article>
-  </template>
+  </section>
 
-  <dialog id="manualDialog">
-    <form method="dialog" class="dialog-card" id="manualForm">
-      <h2 id="manualTitle">手动录入</h2>
-      <label>
-        增加次数，可输入负数修正
-        <input id="manualDelta" type="number" step="1" required />
-      </label>
-      <label>
-        说明
-        <input id="manualReason" type="text" maxlength="500" placeholder="如：批量补录、误操作修正" />
-      </label>
-      <div class="dialog-actions">
-        <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button id="manualConfirmBtn" value="confirm" class="primary">确认</button>
+  <div id="appView" class="app-shell" hidden>
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark"><svg><use href="#i-bolt"></use></svg></span>
+        <div><strong>断路器统计</strong><span>HV CIRCUIT BREAKER</span></div>
       </div>
+      <nav class="nav-list" aria-label="主导航">
+        <button class="nav-item active" data-view="dashboard"><svg><use href="#i-grid"></use></svg><span>仪表盘</span></button>
+        <button class="nav-item" data-view="machines"><svg><use href="#i-machine"></use></svg><span>样机管理</span></button>
+        <button class="nav-item" data-view="records"><svg><use href="#i-list"></use></svg><span>操作记录</span></button>
+        <button class="nav-item" data-view="analytics"><svg><use href="#i-chart"></use></svg><span>统计分析</span></button>
+        <button class="nav-item" data-view="backup"><svg><use href="#i-download"></use></svg><span>导出备份</span></button>
+        <button class="nav-item" data-view="settings"><svg><use href="#i-settings"></use></svg><span>系统设置</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sync-mini"><span class="live-dot"></span><div><small>数据更新时间</small><strong id="sidebarSyncTime">--</strong></div></div>
+        <div class="version-line"><span>版本</span><strong>v6.0.0</strong></div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button id="mobileMenuBtn" class="icon-button mobile-only" aria-label="打开菜单"><svg><use href="#i-menu"></use></svg></button>
+        <div class="page-heading"><h1 id="pageTitle">高压断路器机械操作次数统计</h1><p id="pageSubtitle">样机状态监控 · 操作数据追踪 · 寿命进度管理</p></div>
+        <div class="topbar-actions">
+          <span id="syncBadge" class="sync-badge syncing"><span class="live-dot"></span><span>正在同步</span></span>
+          <div class="user-chip"><span class="avatar"><svg><use href="#i-user"></use></svg></span><div><strong id="userName">用户</strong><span id="userRole">运维工程师</span></div></div>
+          <button id="topExportBtn" class="btn btn-primary"><svg><use href="#i-download"></use></svg><span>导出数据</span></button>
+          <button id="logoutBtn" class="icon-button" title="退出登录"><svg><use href="#i-logout"></use></svg></button>
+        </div>
+      </header>
+
+      <main class="content">
+        <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+        <section id="view-dashboard" class="view-panel active">
+          <div class="kpi-grid">
+            <article class="kpi-card"><span class="kpi-icon blue"><svg><use href="#i-counter"></use></svg></span><div class="kpi-main"><span>总操作次数</span><strong id="kpiTotalOperations">0</strong><small>累计机械操作次数</small></div><span class="kpi-unit">次</span></article>
+            <article class="kpi-card"><span class="kpi-icon teal"><svg><use href="#i-machine"></use></svg></span><div class="kpi-main"><span>样机数量</span><strong id="kpiMachineCount">0</strong><small>当前在册样机总数</small></div><span class="kpi-unit">台</span></article>
+            <article class="kpi-card"><span class="kpi-icon violet"><svg><use href="#i-calendar"></use></svg></span><div class="kpi-main"><span>今日新增次数</span><strong id="kpiTodayCount">0</strong><small>今日正向操作次数</small></div><span class="kpi-unit">次</span></article>
+            <article class="kpi-card"><span class="kpi-icon orange"><svg><use href="#i-chart"></use></svg></span><div class="kpi-main"><span>寿命完成率</span><strong id="kpiCompletion">0%</strong><small>全部样机平均完成率</small></div></article>
+          </div>
+
+          <div class="dashboard-middle">
+            <article class="card trend-card">
+              <div class="card-head"><div><h2>近7日操作趋势</h2><p>按操作日期汇总正向机械操作次数</p></div><select id="trendMachineSelect" class="compact-select"><option value="">全部样机</option></select></div>
+              <div class="chart-shell"><canvas id="trendCanvas"></canvas><div id="chartEmpty" class="chart-empty" hidden>近7日暂无操作数据</div></div>
+              <p id="trendNarrative" class="trend-narrative">近7日暂无机械操作记录。</p>
+            </article>
+
+            <article class="card life-card">
+              <div class="card-head"><div><h2>样机寿命进度</h2><p>按当前累计次数计算</p></div><button class="text-button" data-go="machines">查看全部</button></div>
+              <div id="lifeProgressList" class="life-list"></div>
+            </article>
+
+            <article class="card quick-card">
+              <div class="card-head"><div><h2><span class="title-icon"><svg><use href="#i-bolt"></use></svg></span>快速录入</h2><p>新增机械操作记录</p></div></div>
+              <form id="quickEntryForm" class="compact-form">
+                <label><span>样机<i>*</i></span><select id="quickMachine" required><option value="">请选择样机</option></select></label>
+                <label><span>操作时间<i>*</i></span><input id="quickTime" type="datetime-local" step="1" required></label>
+                <label><span>操作人<i>*</i></span><input id="quickOperator" type="text" maxlength="100" placeholder="请输入操作人" required></label>
+                <label><span>操作次数<i>*</i></span><input id="quickCount" type="number" step="1" placeholder="正数增加，负数修正" required></label>
+                <label><span>备注</span><textarea id="quickRemark" rows="2" maxlength="500" placeholder="选填，支持500字以内"></textarea></label>
+                <button id="quickSaveBtn" class="btn btn-primary btn-block" type="submit"><svg><use href="#i-check"></use></svg>保存记录</button>
+              </form>
+            </article>
+          </div>
+
+          <div class="dashboard-bottom">
+            <article class="card table-card">
+              <div class="card-head table-head"><div><h2>样机列表</h2><p id="dashboardMachineCount">共 0 台样机</p></div><div class="inline-tools"><div class="search-box"><svg><use href="#i-search"></use></svg><input id="dashboardMachineSearch" type="search" placeholder="搜索样机编号/型号"></div><select id="dashboardMachineStatus" class="compact-select"><option value="">全部状态</option><option>运行中</option><option>已完成</option><option>暂停</option><option>检修中</option></select></div></div>
+              <div class="table-scroll"><table><thead><tr><th>样机编号</th><th>电压等级</th><th>系列</th><th>机构类型</th><th>累计次数</th><th>寿命完成率</th><th>状态</th><th>操作</th></tr></thead><tbody id="dashboardMachineBody"></tbody></table></div>
+            </article>
+
+            <article class="card table-card">
+              <div class="card-head table-head"><div><h2>操作记录</h2><p id="dashboardLogCount">最近 0 条记录</p></div><button id="dashboardRefreshBtn" class="icon-button subtle" title="刷新"><svg><use href="#i-refresh"></use></svg></button></div>
+              <div class="table-scroll"><table><thead><tr><th>操作时间</th><th>样机编号</th><th>操作人</th><th>操作次数</th><th>备注</th><th>操作</th></tr></thead><tbody id="dashboardLogBody"></tbody></table></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-machines" class="view-panel">
+          <div class="view-toolbar"><div><h2>样机管理</h2><p>维护样机档案及机械寿命目标，样机不提供删除功能。</p></div><button id="addMachineBtn" class="btn btn-primary"><svg><use href="#i-plus"></use></svg>新增样机</button></div>
+          <article class="card table-card full-card">
+            <div class="card-head table-head"><div><h2>全部样机</h2><p id="machineTotalLabel">共 0 台</p></div><div class="inline-tools"><div class="search-box"><svg><use href="#i-search"></use></svg><input id="machineSearch" type="search" placeholder="搜索编号、系列、机构或备注"></div><select id="machineStatusFilter" class="compact-select"><option value="">全部状态</option><option>运行中</option><option>已完成</option><option>暂停</option><option>检修中</option></select></div></div>
+            <div class="table-scroll"><table><thead><tr><th>样机编号</th><th>电压等级</th><th>型号/系列</th><th>机构类型</th><th>运行环境</th><th>累计次数</th><th>目标次数</th><th>寿命完成率</th><th>状态</th><th>操作</th></tr></thead><tbody id="machineBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="view-records" class="view-panel">
+          <div class="view-toolbar"><div><h2>操作记录</h2><p>记录仅支持编辑，不支持删除或清空；修改后自动重算样机累计次数。</p></div><button id="recordsRefreshBtn" class="btn btn-secondary"><svg><use href="#i-refresh"></use></svg>刷新</button></div>
+          <article class="card full-card">
+            <div class="record-filters"><div class="search-box wide"><svg><use href="#i-search"></use></svg><input id="recordSearch" type="search" placeholder="搜索样机编号、操作人或备注"></div><label>开始日期<input id="recordStartDate" type="date"></label><label>结束日期<input id="recordEndDate" type="date"></label><button id="recordResetFilters" class="btn btn-secondary">重置</button></div>
+            <div class="table-scroll"><table><thead><tr><th>操作时间</th><th>样机编号</th><th>电压等级</th><th>操作人</th><th>操作次数</th><th>累计次数</th><th>备注</th><th>操作</th></tr></thead><tbody id="recordBody"></tbody></table></div>
+            <div class="pagination"><span id="recordCountLabel">共 0 条</span><div><button id="recordPrev" class="page-btn">上一页</button><span id="recordPageLabel">第 1 页</span><button id="recordNext" class="page-btn">下一页</button></div></div>
+          </article>
+        </section>
+
+        <section id="view-analytics" class="view-panel">
+          <div class="view-toolbar"><div><h2>统计分析</h2><p>对比各样机累计次数、目标完成率和近7日操作量。</p></div></div>
+          <div class="analytics-grid"><article class="card full-card"><div class="card-head"><div><h2>样机操作量对比</h2><p>按累计机械操作次数排序</p></div></div><div id="barAnalytics" class="bar-analytics"></div></article><article class="card full-card"><div class="card-head"><div><h2>状态分布</h2><p>当前样机运行状态统计</p></div></div><div id="statusAnalytics" class="status-analytics"></div></article></div>
+        </section>
+
+        <section id="view-backup" class="view-panel">
+          <div class="view-toolbar"><div><h2>导出备份</h2><p>将当前云端数据导出到本地，用于归档或二次分析。</p></div></div>
+          <div class="backup-grid"><article class="card action-card"><span class="action-icon"><svg><use href="#i-file"></use></svg></span><div><h3>导出操作记录 CSV</h3><p>适合使用 Excel 打开，包含全部操作记录和累计次数。</p></div><button id="exportCsvBtn" class="btn btn-primary">导出 CSV</button></article><article class="card action-card"><span class="action-icon teal"><svg><use href="#i-download"></use></svg></span><div><h3>导出完整 JSON 备份</h3><p>包含样机档案、操作记录及导出时间，可用于完整归档。</p></div><button id="exportJsonBtn" class="btn btn-secondary">导出 JSON</button></article></div>
+        </section>
+
+        <section id="view-settings" class="view-panel">
+          <div class="view-toolbar"><div><h2>系统设置</h2><p>设置默认操作人及自动同步频率，配置仅保存在当前浏览器。</p></div></div>
+          <article class="card settings-card"><form id="settingsForm" class="settings-form"><label>默认操作人<input id="settingOperator" type="text" maxlength="100" placeholder="如：张工"></label><label>自动同步间隔<select id="settingInterval"><option value="0">关闭自动同步</option><option value="10">10 秒</option><option value="20">20 秒</option><option value="30">30 秒</option><option value="60">60 秒</option></select></label><button class="btn btn-primary" type="submit">保存设置</button></form><div class="config-note"><strong>Supabase 配置</strong><p>Project URL 与 Publishable key 请填写在 <code>config.js</code> 中。请勿在网页文件内放入数据库密码、Secret key 或 service_role key。</p></div></article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="sidebarMask" class="sidebar-mask" hidden></div>
+
+  <dialog id="machineDialog" class="modal">
+    <form id="machineForm" class="modal-card" method="dialog">
+      <div class="modal-head"><div><span class="overline">MACHINE PROFILE</span><h2 id="machineDialogTitle">新增样机</h2></div><button class="icon-button modal-close" type="button"><svg><use href="#i-close"></use></svg></button></div>
+      <input id="machineId" type="hidden">
+      <div class="form-grid">
+        <label>样机编号<i>*</i><input id="machineCode" type="text" maxlength="100" placeholder="如：CB-72.5-001" required></label>
+        <label>电压等级<i>*</i><input id="machineVoltage" type="text" maxlength="50" placeholder="如：72.5 kV" required></label>
+        <label>型号 / 系列<input id="machineSeries" type="text" maxlength="100" placeholder="如：PASS"></label>
+        <label>机构类型<input id="machineMechanism" type="text" maxlength="100" placeholder="如：弹簧机构"></label>
+        <label>运行环境<select id="machineEnvironment"><option>户内</option><option>户外</option><option>试验室</option><option>其他</option></select></label>
+        <label>状态<select id="machineStatus"><option>运行中</option><option>已完成</option><option>暂停</option><option>检修中</option></select></label>
+        <label>目标次数<input id="machineTarget" type="number" min="0" step="1" value="10000"></label>
+        <label>初始次数<input id="machineInitial" type="number" min="0" step="1" value="0"></label>
+        <label class="full">初始操作人<input id="machineInitialOperator" type="text" maxlength="100" placeholder="初始次数大于0时填写"></label>
+        <label class="full">备注<textarea id="machineNote" rows="3" maxlength="500" placeholder="机构版本、灭弧室批次、试验工况等"></textarea></label>
+      </div>
+      <div class="modal-actions"><button class="btn btn-secondary modal-close" type="button">取消</button><button id="machineSaveBtn" class="btn btn-primary" type="submit">保存样机</button></div>
     </form>
   </dialog>
 
-  <dialog id="editDialog">
-    <form method="dialog" class="dialog-card" id="editForm">
-      <h2>编辑样机信息</h2>
-      <label>
-        样机编号
-        <input id="editName" type="text" maxlength="100" required />
-      </label>
-      <label>
-        型号/规格
-        <input id="editModel" type="text" maxlength="200" />
-      </label>
-      <label>
-        试验目标次数
-        <input id="editTarget" type="number" min="0" step="1" />
-      </label>
-      <label>
-        备注
-        <input id="editNote" type="text" maxlength="500" />
-      </label>
-      <div class="dialog-actions">
-        <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button id="editConfirmBtn" value="confirm" class="primary">保存</button>
+  <dialog id="recordDialog" class="modal">
+    <form id="recordEditForm" class="modal-card" method="dialog">
+      <div class="modal-head"><div><span class="overline">OPERATION RECORD</span><h2>编辑操作记录</h2></div><button class="icon-button modal-close" type="button"><svg><use href="#i-close"></use></svg></button></div>
+      <input id="recordId" type="hidden">
+      <div class="form-grid">
+        <label class="full">样机<i>*</i><select id="recordMachine" required></select></label>
+        <label>操作时间<i>*</i><input id="recordTime" type="datetime-local" step="1" required></label>
+        <label>操作人<i>*</i><input id="recordOperator" type="text" maxlength="100" required></label>
+        <label class="full">操作次数<i>*</i><input id="recordDelta" type="number" step="1" required></label>
+        <label class="full">备注<textarea id="recordRemark" rows="3" maxlength="500"></textarea></label>
       </div>
+      <div class="modal-actions"><button class="btn btn-secondary modal-close" type="button">取消</button><button id="recordSaveBtn" class="btn btn-primary" type="submit">保存修改</button></div>
     </form>
   </dialog>
 
-  <script type="module" src="./app.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=6.0.0"></script>
+  <script src="./app.js?v=6.0.0"></script>
 </body>
 </html>
