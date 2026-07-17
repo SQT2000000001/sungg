@@ -4,37 +4,86 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>断路器样机操作次数统计工具</title>
-  <meta name="description" content="用于记录、统计和导出断路器样机操作次数的静态网页工具，适合部署到 GitHub Pages。" />
-  <link rel="stylesheet" href="style.css" />
+  <meta
+    name="description"
+    content="使用 Supabase 云数据库在线记录、统计和导出断路器样机操作次数。"
+  />
+  <link rel="stylesheet" href="./style.css?v=2" />
 </head>
 <body>
   <header class="app-header">
     <div>
       <p class="eyebrow">Breaker Operation Counter</p>
       <h1>断路器样机操作次数统计工具</h1>
-      <p class="subtitle">用于样机动作次数、寿命试验、调试记录和阶段性统计。</p>
+      <p class="subtitle">云端保存样机动作次数、寿命试验、调试记录和阶段性统计。</p>
     </div>
-    <div class="header-actions">
-      <button id="exportJsonBtn" class="secondary">导出备份</button>
-      <button id="exportCsvBtn" class="secondary">导出CSV</button>
+
+    <div id="onlineActions" class="header-actions" hidden>
+      <span id="connectionStatus" class="status-badge" aria-live="polite">正在连接云端……</span>
+      <button id="refreshBtn" type="button" class="secondary">刷新数据</button>
+      <button id="exportJsonBtn" type="button" class="secondary">导出备份</button>
+      <button id="exportCsvBtn" type="button" class="secondary">导出 CSV</button>
       <label class="import-label">
         导入备份
         <input id="importFile" type="file" accept=".json,application/json" />
       </label>
+      <button id="logoutBtn" type="button" class="danger secondary">退出登录</button>
     </div>
   </header>
 
-  <main class="layout">
+  <section id="messageBar" class="message-bar" hidden aria-live="polite"></section>
+
+  <main id="authMain" class="auth-layout">
+    <section class="panel auth-panel">
+      <div>
+        <p class="eyebrow">Secure Cloud Access</p>
+        <h2>登录后录入云端数据</h2>
+        <p class="auth-description">
+          数据将保存到 Supabase 数据库，可在不同电脑和手机上同步查看。
+        </p>
+      </div>
+
+      <form id="loginForm" class="form-grid single-column">
+        <label>
+          登录邮箱
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="username"
+            placeholder="name@example.com"
+            required
+          />
+        </label>
+        <label>
+          登录密码
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            minlength="6"
+            required
+          />
+        </label>
+        <button id="loginBtn" type="submit" class="primary">登录</button>
+      </form>
+
+      <div class="notice">
+        登录账号由管理员在 Supabase 后台创建。请勿在 GitHub 代码中填写数据库 Secret Key。
+      </div>
+    </section>
+  </main>
+
+  <main id="appMain" class="layout" hidden>
     <section class="panel form-panel">
       <h2>新增样机</h2>
       <form id="breakerForm" class="form-grid">
         <label>
           样机编号 <span>*</span>
-          <input id="breakerName" type="text" placeholder="如：CB-72.5kV-001" required />
+          <input id="breakerName" type="text" maxlength="100" placeholder="如：CB-72.5kV-001" required />
         </label>
         <label>
           型号/规格
-          <input id="breakerModel" type="text" placeholder="如：72.5kV 真空断路器" />
+          <input id="breakerModel" type="text" maxlength="200" placeholder="如：72.5kV 真空断路器" />
         </label>
         <label>
           试验目标次数
@@ -46,9 +95,14 @@
         </label>
         <label class="full">
           备注
-          <input id="breakerNote" type="text" placeholder="如：机械寿命试验、带载/空载、工况说明" />
+          <input
+            id="breakerNote"
+            type="text"
+            maxlength="500"
+            placeholder="如：机械寿命试验、带载/空载、工况说明"
+          />
         </label>
-        <button type="submit" class="primary full">添加样机</button>
+        <button id="addBreakerBtn" type="submit" class="primary full">添加样机</button>
       </form>
     </section>
 
@@ -73,7 +127,7 @@
         </div>
       </div>
       <div class="notice">
-        数据保存在当前浏览器本地。换电脑、清缓存或多人协作前，请先导出备份。
+        数据保存在云端数据库。页面每 20 秒自动同步一次，也可以点击“刷新数据”。
       </div>
     </section>
 
@@ -83,14 +137,14 @@
         <input id="searchInput" class="search" type="search" placeholder="搜索编号、型号或备注" />
       </div>
       <div id="breakerList" class="breaker-list empty-state">
-        暂无样机，请先新增一台断路器样机。
+        正在读取云端数据……
       </div>
     </section>
 
     <section class="panel log-panel">
       <div class="section-title-row">
         <h2>操作记录</h2>
-        <button id="clearLogBtn" class="danger secondary">清空记录</button>
+        <button id="clearLogBtn" type="button" class="danger secondary">清空记录</button>
       </div>
       <div class="log-table-wrap">
         <table>
@@ -104,7 +158,7 @@
             </tr>
           </thead>
           <tbody id="logBody">
-            <tr><td colspan="5" class="muted center">暂无操作记录</td></tr>
+            <tr><td colspan="5" class="muted center">正在读取云端数据……</td></tr>
           </tbody>
         </table>
       </div>
@@ -130,12 +184,12 @@
         <strong class="count-value">0</strong>
       </div>
       <div class="action-grid">
-        <button data-delta="1" class="primary">+1</button>
-        <button data-delta="10" class="primary">+10</button>
-        <button data-delta="100" class="primary">+100</button>
-        <button class="secondary manual-btn">手动录入</button>
-        <button class="secondary edit-btn">编辑</button>
-        <button class="danger secondary delete-btn">删除</button>
+        <button type="button" data-delta="1" class="primary">+1</button>
+        <button type="button" data-delta="10" class="primary">+10</button>
+        <button type="button" data-delta="100" class="primary">+100</button>
+        <button type="button" class="secondary manual-btn">手动录入</button>
+        <button type="button" class="secondary edit-btn">编辑</button>
+        <button type="button" class="danger secondary delete-btn">删除</button>
       </div>
     </article>
   </template>
@@ -149,11 +203,11 @@
       </label>
       <label>
         说明
-        <input id="manualReason" type="text" placeholder="如：批量补录、误操作修正" />
+        <input id="manualReason" type="text" maxlength="500" placeholder="如：批量补录、误操作修正" />
       </label>
       <div class="dialog-actions">
         <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button value="confirm" class="primary">确认</button>
+        <button id="manualConfirmBtn" value="confirm" class="primary">确认</button>
       </div>
     </form>
   </dialog>
@@ -163,11 +217,11 @@
       <h2>编辑样机信息</h2>
       <label>
         样机编号
-        <input id="editName" type="text" required />
+        <input id="editName" type="text" maxlength="100" required />
       </label>
       <label>
         型号/规格
-        <input id="editModel" type="text" />
+        <input id="editModel" type="text" maxlength="200" />
       </label>
       <label>
         试验目标次数
@@ -175,15 +229,15 @@
       </label>
       <label>
         备注
-        <input id="editNote" type="text" />
+        <input id="editNote" type="text" maxlength="500" />
       </label>
       <div class="dialog-actions">
         <button value="cancel" class="secondary" formnovalidate>取消</button>
-        <button value="confirm" class="primary">保存</button>
+        <button id="editConfirmBtn" value="confirm" class="primary">保存</button>
       </div>
     </form>
   </dialog>
 
-  <script src="app.js"></script>
+  <script type="module" src="./app.js?v=2"></script>
 </body>
 </html>
